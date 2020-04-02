@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #define M 4
@@ -19,7 +22,68 @@ struct v
     int j; /* column */
 };
 
-void *count(void *ptr) /* thread for every element in matrix */
+void *runner(void *ptr); /* the thread */
+
+void main()
+{   
+    int i, j;
+    int thread_counter = 0;
+    
+    pthread_t workers[NUM_THREADS];
+    
+    /* create M * N worker threads */
+    for (i = 0; i < M; i++)
+    {
+        for (j = 0; j < N; j++) 
+        {
+            struct v *data = (struct v *) malloc(sizeof(struct v));
+            data->i = i;
+            data->j = j;
+            /* create the thread passing it data as a paramater*/
+            pthread_create(&workers[thread_counter], NULL, runner, data);
+            pthread_join(workers[thread_counter], NULL);
+            thread_counter++;
+        }
+    }
+    
+    /* Waiting for threads to complete */
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(workers[i], NULL);
+    }
+
+    //shared memory
+    // shared memory
+    key_t key = 1234;
+    int *share[M][N];
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+
+    for(int i=0;i<M;i++){
+        for(int j=0;j<N;j++){
+            share[i][j] = shmat(shmid, NULL, 0);
+        }
+    }
+
+    for(i = 0; i < M; i++)
+    { 
+        for(j = 0; j < N; j++)
+        { 
+            *share[i][j] = C[i][j];
+            printf("%d\t", *share[i][j]);\
+            sleep(2);
+        }
+        printf("\n");
+    }
+
+    for(int i = 0;i < M;i++){
+        for(int j = 0;j < N;j++){
+            shmdt(share[i][j]);
+        }
+    }
+    shmctl(shmid, IPC_RMID, NULL);  
+}
+
+void *runner(void *ptr)
 {    
     /* Casting paramater to struct v pointer */
     struct v *data = ptr;
@@ -33,47 +97,3 @@ void *count(void *ptr) /* thread for every element in matrix */
     C[data->i][data->j] = sum;
     pthread_exit(0);
 }
-
-int main(int argc, char **argv)
-{
-    int i, j;
-    int thread_counter = 0;
-    
-    pthread_t thread[NUM_THREADS];
-    
-    /* create M * N worker threads */
-    for (i = 0; i < M; i++)
-    {
-        for (j = 0; j < N; j++) 
-        {
-            struct v *data = (struct v *) malloc(sizeof(struct v));
-            data->i = i;
-            data->j = j;
-            // printf("%d %d\n",data->i,data->j);
-            /* create the thread passing it data as a paramater*/
-            pthread_create(&thread[thread_counter], NULL, count, data);
-            pthread_join(thread[thread_counter], NULL);
-            thread_counter++;
-        }
-    }
-    
-    /* Waiting for threads to complete */
-    for (i = 0; i < NUM_THREADS; i++)
-    {
-        pthread_join(thread[i], NULL);
-    }
-    
-    for(i = 0; i < M; i++)
-    { 
-        for(j = 0; j < N; j++)
-        { 
-            printf("%d", C[i][j]);
-            if(j!=N-1)
-                printf("\t");
-        }
-        printf("\n");
-    }
-    return 0;
-}
-
-

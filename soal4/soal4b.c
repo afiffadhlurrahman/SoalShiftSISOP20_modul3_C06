@@ -10,7 +10,6 @@
 #define NUM_THREADS M * N
 
 int hasil[M][N];
-int print[M][N];
 
 struct v
 {

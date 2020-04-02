@@ -1,17 +1,31 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
+#include <pthread.h>
 
-#define MAX 500
 #define M 4
 #define N 5
+#define NUM_THREADS M * N
 
-int multiply(int x, int res[], int res_size); 
-void factorial(int n);
+int hasil[M][N];
+int print[M][N];
+
+struct v
+{
+    int i; /* row */
+    int j; /* column */
+};
+
+void *runner1(void *ptr);
 
 void main()
 {
+    int i, j;
+    int thread_counter = 0;
+    pthread_t workers[NUM_THREADS];
+
     key_t key = 1234;
     int *A[M][N];
     int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
@@ -24,9 +38,31 @@ void main()
 
     for(int i = 0;i<M;i++){
         for(int j=0;j<N;j++){
-            factorial(*A[i][j]);
-            printf("\t");
+            hasil[i][j]=*A[i][j];
             sleep(2);
+        }
+    }
+
+    for(int i = 0;i<M;i++){
+        for(int j=0;j<N;j++){
+            struct v *data = (struct v *) malloc(sizeof(struct v));
+            data->i = i;
+            data->j = j;
+            /* create the thread passing it data as a paramater*/
+            pthread_create(&workers[thread_counter], NULL, runner1, data);
+            pthread_join(workers[thread_counter], NULL);
+            thread_counter++;
+        }
+    }
+
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(workers[i], NULL);
+    }
+
+    for(int i = 0;i < M;i++){
+        for(int j = 0;j < N;j++){
+            printf("%d\t",hasil[i][j]);
         }
         printf("\n");
     }
@@ -39,33 +75,17 @@ void main()
     shmctl(shmid, IPC_RMID, NULL);
 }
 
-void factorial(int n) { 
-	int res[MAX]; 
-	res[0] = 1; 
-	int res_size = 1; 
-
-	for (int x=2; x<=n; x++) 
-		res_size = multiply(x, res, res_size); 
-
-	for (int i=res_size-1; i>=0; i--) 
-        printf("%d",res[i]);
-} 
-
-int multiply(int x, int res[], int res_size) { 
-	int carry = 0; 
-	
-	for (int i=0; i<res_size; i++) 
-	{ 
-		int prod = res[i] * x + carry; 
-		res[i] = prod % 10; 
-		carry = prod/10;	 
-	} 
-
-	while (carry) 
-	{ 
-		res[res_size] = carry%10; 
-		carry = carry/10; 
-		res_size++; 
-	} 
-	return res_size; 
-} 
+void *runner1(void *ptr)
+{    
+    /* Casting paramater to struct v pointer */
+    struct v *data = ptr;
+    int i, sum = 0;
+    
+    for(i = 1; i <= hasil[data->i][data->j]; i++)
+    {    
+        sum += i;
+    }
+    
+    hasil[data->i][data->j] = sum;
+    pthread_exit(0);
+}

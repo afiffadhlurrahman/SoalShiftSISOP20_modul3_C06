@@ -19,11 +19,10 @@ int main(int argc, char const *argv[]) {
     FILE *file; 
     char *fname;
     fname = "akun.txt";
-    int *flag = 0;
 
-    char str[MAXCHAR];
-    char *buffer1[MAXCHAR];
-    
+    int flag = 0;
+
+    char str[MAXCHAR];    
     // char *hello = "Hello from server";
       
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -56,25 +55,28 @@ int main(int argc, char const *argv[]) {
     }
 
     valread = read( new_socket , buffer, 1024);
+    printf("%s\n",buffer);
     if(strcmp(buffer,"login")==0){
-        file = fopen(fname, "w+");
+        file = fopen(fname, "r");
         valread = read( new_socket , buffer, 1024);
         while (fgets(str, MAXCHAR, file) != NULL){
             if(strcmp(str,buffer) == 0){
                 printf("Auth success\n");
-                *flag = 1;
+                flag = 1;
             }
         }
         if(flag == 0){
             printf("Auth Failed\n");
         }
-        send(new_socket , flag , sizeof(flag) , 0 );
+        send(new_socket , &flag , sizeof(flag) , 0 );
     }
     else if(strcmp(buffer,"register")==0){
-        printf("regis\n");
+        file = fopen(fname, "r+");
+        valread = read( new_socket , buffer, 1024);
+        printf("%s",buffer);
+        fprintf(file,"%s\n",buffer);
     }
     
-    
-    
+    fclose(file);
     return 0;
 }

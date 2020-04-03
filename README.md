@@ -1,5 +1,6 @@
 # SoalShiftSISOP20_modul3_C06
-thread, ipc
+- Muhammad Afif Fadhlurrahman 05111840000093
+- Vincentius Tanubrata 05111840000091
 
 
 ## Soal 1 Pokemon

@@ -18,6 +18,7 @@ int main(int argc, char const *argv[]) {
     
     FILE *file; 
     char *fname;
+    char c;
     fname = "akun.txt";
 
     int flag = 0;
@@ -73,6 +74,13 @@ int main(int argc, char const *argv[]) {
     else if(strcmp(buffer,"register")==0){
         file = fopen(fname, "r+");
         valread = read( new_socket , buffer, 1024);
+        c = fgetc(file); 
+        while (c != EOF) 
+        { 
+            printf ("%c", c); 
+            c = fgetc(file); 
+        }
+
         printf("%s",buffer);
         fprintf(file,"%s\n",buffer);
     }

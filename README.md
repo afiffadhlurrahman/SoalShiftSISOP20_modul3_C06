@@ -759,7 +759,7 @@ int main(int argc, char const *argv[]) {
 ## Soal 3
 mengelompokan ekstensi file kedalam foldernya masing masing dengan nama ekstensi tersebut
 terdapat 3 perintah berbeda yaitu -f, -d , dan *
-```
+```c
 pthread_t tid[1000];
 
 char* nowDir, *tempDir;
@@ -842,7 +842,7 @@ char* getFileName(char name[]){
 }
 ```
 mendapatkan extensi file dengan getExtentionFile, menggunakan strchr
-```
+```c
 char *getExtentionFile(char name[]){
     char *ex = strchr(getFileName(name),'.'); 
     if(ex==NULL) return NULL;
@@ -852,7 +852,7 @@ char *getExtentionFile(char name[]){
 }
 ```
 memindahkan file dengan fopen
-```
+```c
 void moveFileNow(char s[],char d[]){ //mindahin file
     int c;
     FILE *f1, *f2;
@@ -874,7 +874,7 @@ void moveFileNow(char s[],char d[]){ //mindahin file
 }
 ```
 memindahkan file dengan perintah -f (memindahkan file yang kita input di argumen
-```
+```c
 void *moveFile(void *arg){
     char* extention ;
     extention= getExtentionFile((char *)arg);
@@ -896,7 +896,7 @@ void *moveFile(void *arg){
 }
 ```
 memindahkan file dengan perintah -d (memindahkan dengan input directory)
-```
+```c
 void *moveFile2(void *arg){
     char *extention;
     extention = getExtentionFile((char *)arg);
@@ -919,7 +919,7 @@ void *moveFile2(void *arg){
 }
 ```
 memindahkan file dengan perintah * (memindahkan semua file di directory sekarang)
-```
+```c
 void *moveFileBintang(void *arg){
     char *extention ;
     extention = getExtentionFile((char *)arg);

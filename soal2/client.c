@@ -37,10 +37,10 @@ int main(int argc, char const *argv[]) {
     char *fname;
     int flag,reg = 0;
     int cek = 0;
-    fname = "akun.txt";
-    char user[10],pass[10],choice[20];
-    char str[MAXCHAR],hello[100];
-    char cekUser[20],cekPass[20];
+    
+    char user[30],pass[30],choice[20];
+    char str[MAXCHAR],hello[1000];
+    char cekUser[30],cekPass[30];
     
     printf("1. login\n");
     printf("2. register\n");
@@ -57,9 +57,9 @@ int main(int argc, char const *argv[]) {
     
     if(cek==2){
         printf("username: ");
-        scanf("%s",cekUser);
+        scanf("\n%[^\n]%*c",cekUser);
         printf("password: ");
-        scanf("%s",cekPass);
+        scanf("\n%[^\n]%*c",cekPass);
 
         sprintf(hello, "username: %s password: %s\n", cekUser, cekPass);
         send(sock , &hello , strlen(hello) , 0 );
@@ -74,9 +74,9 @@ int main(int argc, char const *argv[]) {
     }
     else if(cek == 1){
         printf("username: ");
-        scanf("%s",user);
+        scanf("\n%[^\n]%*c",user);
         printf("password: ");
-        scanf("%s",pass);
+        scanf("\n%[^\n]%*c",pass);
 
         sprintf(hello, "username: %s password: %s\n", user, pass);
         send(sock , &hello , strlen(hello) , 0 );

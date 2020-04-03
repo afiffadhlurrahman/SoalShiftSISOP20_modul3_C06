@@ -35,12 +35,12 @@ int main(int argc, char const *argv[]) {
 
     FILE *file; 
     char *fname;
-    int flag,*reg = 0;
+    int flag,reg = 0;
     int cek = 0;
     fname = "akun.txt";
     char user[10],pass[10],choice[20];
-    char str[MAXCHAR],*hello;
-    char cekUser[20],cekPass[20],buffer1[MAXCHAR];
+    char str[MAXCHAR],hello[100];
+    char cekUser[20],cekPass[20];
     
     printf("1. login\n");
     printf("2. register\n");
@@ -60,10 +60,10 @@ int main(int argc, char const *argv[]) {
         scanf("%s",cekUser);
         printf("password: ");
         scanf("%s",cekPass);
+
         sprintf(hello, "username: %s password: %s\n", cekUser, cekPass);
-        send(sock , hello , strlen(hello) , 0 );
-        valread = read( sock , buffer, 1024);
-        
+        send(sock , &hello , strlen(hello) , 0 );
+        valread = read( sock , &flag, sizeof(flag));
         if(flag == 1){
             printf("login success\n");
         }
@@ -73,20 +73,18 @@ int main(int argc, char const *argv[]) {
         }
     }
     else if(cek == 1){
-        file = fopen(fname, "w");
-        
         printf("username: ");
         scanf("%s",user);
         printf("password: ");
         scanf("%s",pass);
 
-        fprintf(file,"username: %s ",user);
-        fprintf(file,"password: %s\n",pass);
-        printf("register success");
-        *reg = 1;
-        send(sock , reg , sizeof(reg) , 0 );
+        sprintf(hello, "username: %s password: %s\n", user, pass);
+        send(sock , &hello , strlen(hello) , 0 );
+
+        printf("register success\n");
+        reg = 1;
+        send(sock , &reg , sizeof(reg) , 0 );
     }
     
-    fclose(file);
     return 0;
 }

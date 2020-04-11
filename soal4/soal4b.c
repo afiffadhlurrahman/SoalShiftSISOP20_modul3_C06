@@ -38,8 +38,10 @@ void main()
     for(int i = 0;i<M;i++){
         for(int j=0;j<N;j++){
             hasil[i][j]=*A[i][j];
+	        printf("%d\t",hasil[i][j]);
             sleep(2);
         }
+	printf("\n");
     }
 
     for(int i = 0;i<M;i++){

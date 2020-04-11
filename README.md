@@ -596,7 +596,6 @@ int main(int argc, char const *argv[]) {
     int flag = 0;
 
     char str[MAXCHAR];    
-    // char *hello = "Hello from server";
       
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
@@ -662,6 +661,40 @@ int main(int argc, char const *argv[]) {
 }
 
 ```
+```c
+if(strcmp(buffer,"login")==0){
+        file = fopen(fname, "r");
+        valread = read( new_socket , buffer, 1024);
+        while (fgets(str, MAXCHAR, file) != NULL){
+            if(strcmp(str,buffer) == 0){
+                printf("Auth success\n");
+                flag = 1;
+            }
+        }
+        if(flag == 0){
+            printf("Auth Failed\n");
+        }
+        send(new_socket , &flag , sizeof(flag) , 0 );
+    }
+```
+Untuk mengecek apakah login atau tidak jika flag = 0 maka login gagal, dan jika flag = 1 maka berhasil login.
+```c
+else if(strcmp(buffer,"register")==0){
+        file = fopen(fname, "r+");
+        valread = read( new_socket , buffer, 1024);
+        c = fgetc(file); 
+        while (c != EOF) 
+        { 
+            printf ("%c", c); 
+            c = fgetc(file); 
+        }
+
+        printf("%s",buffer);
+        fprintf(file,"%s\n",buffer);
+    }
+```
+Untuk mengecek apakah client ingin register atau tidak. kemudian menampilkan semua username dan password yang terdapat pada file akun.txt
+
 ### Client
 ```c
 #include <stdio.h>
@@ -755,7 +788,51 @@ int main(int argc, char const *argv[]) {
     return 0;
 }
 ```
+```c
+if(strcmp(choice,"login")==0){
+        cek = 2;
+    }
+    else if(strcmp(choice,"register")==0){
+        cek = 1;
+    }
+```
+Untuk mengecek apakah user ingin register atau login
+```c
+if(cek==2){
+        printf("username: ");
+        scanf("\n%[^\n]%*c",cekUser);
+        printf("password: ");
+        scanf("\n%[^\n]%*c",cekPass);
 
+        sprintf(hello, "username: %s password: %s\n", cekUser, cekPass);
+        send(sock , &hello , strlen(hello) , 0 );
+        valread = read( sock , &flag, sizeof(flag));
+        if(flag == 1){
+            printf("login success\n");
+        }
+        
+        if(flag == 0){
+            printf("login failed\n");
+        }
+    }
+```
+Jika user ingin login, maka user diharuskan memasukkan username dan password yang mana data tersebut akan di share ke server, serta client akan mendapatkan feedback dari server apakah dapat login atau tidak.
+```c
+    else if(cek == 1){
+        printf("username: ");
+        scanf("\n%[^\n]%*c",user);
+        printf("password: ");
+        scanf("\n%[^\n]%*c",pass);
+
+        sprintf(hello, "username: %s password: %s\n", user, pass);
+        send(sock , &hello , strlen(hello) , 0 );
+
+        printf("register success\n");
+        reg = 1;
+        send(sock , &reg , sizeof(reg) , 0 );
+    }
+```
+Jika user ingin register maka user diharuskan untuk mengisi username serta password yang akan dikirimkan ke server serta disimpan di file akun.txt di server.
 ## Soal 3
 mengelompokan ekstensi file kedalam foldernya masing masing dengan nama ekstensi tersebut
 terdapat 3 perintah berbeda yaitu -f, -d , dan *
@@ -1049,6 +1126,72 @@ void *runner(void *ptr)
     pthread_exit(0);
 }
 ```
+
+```c
+    for (i = 0; i < M; i++)
+    {
+        for (j = 0; j < N; j++) 
+        {
+            struct v *data = (struct v *) malloc(sizeof(struct v));
+            data->i = i;
+            data->j = j;
+            /* create the thread passing it data as a paramater*/
+            pthread_create(&workers[thread_counter], NULL, runner, data);
+            pthread_join(workers[thread_counter], NULL);
+            thread_counter++;
+        }
+    }
+```
+Untuk membuat sebanyak M * N worker thread
+```c
+
+    //shared memory
+    key_t key = 1234;
+    int *share[M][N];
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+
+    for(int i=0;i<M;i++){
+        for(int j=0;j<N;j++){
+            share[i][j] = shmat(shmid, NULL, 0);
+        }
+    }
+
+    for(i = 0; i < M; i++)
+    { 
+        for(j = 0; j < N; j++)
+        { 
+            *share[i][j] = C[i][j];
+            printf("%d\t", *share[i][j]);\
+            sleep(2);
+        }
+        printf("\n");
+    }
+
+    for(int i = 0;i < M;i++){
+        for(int j = 0;j < N;j++){
+            shmdt(share[i][j]);
+        }
+    }
+    shmctl(shmid, IPC_RMID, NULL);  
+```
+Untuk membuat shared memory dan share hasil dari perhitungan yang telah diperoleh
+```c
+void *runner(void *ptr)
+{    
+    /* Casting paramater to struct v pointer */
+    struct v *data = ptr;
+    int i, sum = 0;
+    
+    for(i = 0; i < K; i++)
+    {    
+        sum += A[data->i][i] * B[i][data->j];
+    }
+    
+    C[data->i][data->j] = sum;
+    pthread_exit(0);
+}
+```
+Fungsi untuk melakukan perhitungan memanfaatkan thread yang telah dibuat.
 ### 4.B
 ```C
 #include <stdio.h>
@@ -1142,6 +1285,78 @@ void *runner1(void *ptr)
     pthread_exit(0);
 }
 ```
+```c
+    int i, j;
+    int thread_counter = 0;
+    pthread_t workers[NUM_THREADS];
+
+    key_t key = 1234;
+    int *A[M][N];
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+    
+    for(int i=0;i<M;i++){
+        for(int j=0;j<N;j++){
+            A[i][j] = shmat(shmid, NULL, 0);
+        }
+    }
+```
+Menyiapkan agar bisa shared memory
+```c
+for(int i = 0;i<M;i++){
+        for(int j=0;j<N;j++){
+            hasil[i][j]=*A[i][j];
+	    printf("%d\t",hasil[i][j]);
+            sleep(2);
+        }
+	printf("\n");
+    }
+```
+Mengambil data dari hasil shared memory
+```c
+for(int i = 0;i<M;i++){
+        for(int j=0;j<N;j++){
+            struct v *data = (struct v *) malloc(sizeof(struct v));
+            data->i = i;
+            data->j = j;
+            /* create the thread passing it data as a paramater*/
+            pthread_create(&workers[thread_counter], NULL, runner1, data);
+            pthread_join(workers[thread_counter], NULL);
+            thread_counter++;
+        }
+    }
+
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(workers[i], NULL);
+    }
+```
+Membuat thread agar perhitungan nya sesuai indeks i dan j nya atau setiap variable yang ada dalam array data yang akan dihitung
+```c
+    for(int i = 0;i < M;i++){
+        for(int j = 0;j < N;j++){
+            printf("%d\t",hasil[i][j]);
+        }
+        printf("\n");
+    }
+```
+Print hasil perhitungan
+```
+void *runner1(void *ptr)
+{    
+    /* Casting paramater to struct v pointer */
+    struct v *data = ptr;
+    int i, sum = 0;
+    
+    for(i = 1; i <= hasil[data->i][data->j]; i++)
+    {    
+        sum += i;
+    }
+    
+    hasil[data->i][data->j] = sum;
+    pthread_exit(0);
+}
+```
+Fungsi untuk melakukan penjumlahan dari 1 sampai n
 ### 4.C
 ```C
 #include <stdlib.h>
@@ -1189,3 +1404,27 @@ int main() {
     }
 }
 ```
+
+```c
+if (child_id == 0) {
+        // this is child
+        close(pip[0]);
+        dup2(pip[1], STDOUT_FILENO);
+    
+        char *argv[] = {"ls", NULL};
+        execv("/bin/ls", argv);
+    } 
+```
+Untuk mengeksekusi perintah `ls` dan menggunakan pipe agar data bisa digunakan setelah ini.
+```c
+else {
+        // this is parent
+        while ((wait(&status)) > 0);
+        close(pip[1]);
+        dup2(pip[0], STDIN_FILENO);
+        
+        char *argv[] = {"wc", "-l", NULL};
+        execv("/usr/bin/wc", argv);
+    }
+```
+Untuk mengeksekusi perintas `wc -l` dan mengambil data dari pipe yang telah kita miliki.  
